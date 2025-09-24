@@ -1,0 +1,167 @@
+🧪 Quick API Testing Guide
+🔐 Setup
+bash# 1. Start server
+python manage.py runserver
+
+# 2. Create category in Django Admin
+http://127.0.0.1:8000/admin/
+- Add Category: "Electronics" (copy the UUID)
+
+# 3. Get admin token (if needed)
+# Use your auth endpoint or Django admin
+
+📦 API Tests
+1. 📋 LIST Products - GET /api/v1/products/
+bash# Basic list
+curl http://127.0.0.1:8000/api/v1/products/
+
+# With filters
+curl "http://127.0.0.1:8000/api/v1/products/?min_price=100&max_price=500&search=laptop&is_featured=true"
+Response:
+json{
+  "success": true,
+  "message": "Products retrieved successfully", 
+  "count": 25,
+  "results": [...]
+}
+
+2. 🔍 GET Product Details - GET /api/v1/products/{id}/
+bash# By ID or slug
+curl http://127.0.0.1:8000/api/v1/products/gaming-laptop/
+Response:
+json{
+  "success": true,
+  "message": "Product details retrieved successfully",
+  "data": {
+    "id": "uuid-here",
+    "name": "Gaming Laptop",
+    "description": "Full description...",
+    "images": [...],
+    "category": {...}
+  }
+}
+
+3. ➕ CREATE Product - POST /api/v1/products/ 🔒 Admin Only
+bashcurl -X POST "http://127.0.0.1:8000/api/v1/products/" \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Gaming Laptop",
+    "description": "High-performance gaming laptop",
+    "price": "1299.99",
+    "stock_quantity": 15,
+    "category_id": "YOUR_CATEGORY_UUID"
+  }'
+Response:
+json{
+  "success": true,
+  "message": "Product created successfully",
+  "data": {
+    "id": "new-uuid",
+    "name": "Gaming Laptop",
+    "slug": "gaming-laptop",
+    "sku": "PRD-12345678"
+  }
+}
+
+4. ✏️ UPDATE Product - PATCH vs PUT 🔒 Admin Only
+PATCH - PATCH /api/v1/products/{id}/ (Partial Update)
+bash# Update only specific fields
+curl -X PATCH "http://127.0.0.1:8000/api/v1/products/gaming-laptop/" \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "price": "1199.99",
+    "stock_quantity": 10
+  }'
+PUT - PUT /api/v1/products/{id}/ (Full Update)
+bash# Must include ALL required fields
+curl -X PUT "http://127.0.0.1:8000/api/v1/products/gaming-laptop/" \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Gaming Laptop Pro",
+    "description": "Updated description",
+    "price": "1399.99",
+    "stock_quantity": 20,
+    "category_id": "YOUR_CATEGORY_UUID"
+  }'
+🔥 PATCH vs PUT Difference:
+MethodUse CaseFields RequiredBest ForPATCHUpdate few fieldsOnly what you're changingPrice updates, stock changesPUTReplace entire resourceALL required fieldsComplete product overhaul
+Example:
+
+PATCH: Change only price → Send {"price": "99.99"}
+PUT: Must send complete product data → Send all fields
+
+
+5. 🗑️ DELETE Product - DELETE /api/v1/products/{id}/ 🔒 Admin Only
+bashcurl -X DELETE "http://127.0.0.1:8000/api/v1/products/gaming-laptop/" \
+  -H "Authorization: Token YOUR_TOKEN"
+Response:
+json{
+  "success": true,
+  "message": "Product deactivated successfully",
+  "data": {
+    "id": "uuid-here",
+    "name": "Gaming Laptop",
+    "is_active": false
+  }
+}
+
+🎯 Quick Test Flow
+bash# 1. List (empty)
+curl http://127.0.0.1:8000/api/v1/products/
+
+# 2. Create product
+curl -X POST http://127.0.0.1:8000/api/v1/products/ \
+  -H "Authorization: Token TOKEN" \
+  -d '{"name":"Test Product","description":"Test","price":"99.99","stock_quantity":10,"category_id":"UUID"}'
+
+# 3. List (with data)
+curl http://127.0.0.1:8000/api/v1/products/
+
+# 4. Get details
+curl http://127.0.0.1:8000/api/v1/products/test-product/
+
+# 5. Update price (PATCH)
+curl -X PATCH http://127.0.0.1:8000/api/v1/products/test-product/ \
+  -H "Authorization: Token TOKEN" \
+  -d '{"price":"79.99"}'
+
+# 6. Delete
+curl -X DELETE http://127.0.0.1:8000/api/v1/products/test-product/ \
+  -H "Authorization: Token TOKEN"
+
+⚡ Common Filters
+bash# Price range
+?min_price=100&max_price=500
+
+# Category filter  
+?category=electronics
+
+# Featured products
+?is_featured=true
+
+# In stock only
+?in_stock=true
+
+# On sale
+?on_sale=true
+
+# Search
+?search=laptop
+
+# Sort by price
+?ordering=price
+
+# Multiple filters
+?category=electronics&min_price=500&is_featured=true&ordering=-price
+
+🚨 Key Points
+
+🔓 Public: GET endpoints (list, detail)
+🔒 Admin Only: POST, PUT, PATCH, DELETE (need auth token)
+📝 PATCH: Partial updates (recommended)
+📄 PUT: Full replacement (use sparingly)
+🗑️ DELETE: Soft delete (sets is_active=false)
+🔍 Supports: Both UUID and slug lookups
