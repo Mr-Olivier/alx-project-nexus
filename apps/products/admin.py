@@ -1,30 +1,17 @@
+
+
 # apps/products/admin.py
 
 """
-Products Admin Configuration
-
-Configure Django admin interface for product models.
+Product Admin - Simplified (No Category model)
 """
 
 from django.contrib import admin
-from django.utils.html import format_html
-from .models import Product, Category, ProductImage
-
-
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'slug', 'is_active', 'product_count', 'created_at']
-    list_filter = ['is_active', 'created_at']
-    search_fields = ['name', 'description']
-    prepopulated_fields = {'slug': ('name',)}
-    readonly_fields = ['created_at', 'updated_at']
-    
-    def product_count(self, obj):
-        return obj.products.filter(is_active=True).count()
-    product_count.short_description = 'Active Products'
+from .models import Product, ProductImage
 
 
 class ProductImageInline(admin.TabularInline):
+    """Inline admin for product images"""
     model = ProductImage
     extra = 1
     fields = ['image', 'alt_text', 'is_primary', 'order']
@@ -32,31 +19,46 @@ class ProductImageInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
+    """Admin for Product model"""
+    
     list_display = [
-        'name', 'sku', 'price', 'stock_quantity', 
-        'category', 'is_active', 'is_featured', 'created_at'
+        'name', 
+        'category', 
+        'price', 
+        'stock_quantity', 
+        'is_active', 
+        'is_featured',
+        'created_at'
     ]
+    
     list_filter = [
-        'is_active', 'is_featured', 'category', 
-        'created_at', 'stock_quantity'
+        'category',
+        'is_active', 
+        'is_featured', 
+        'created_at'
     ]
-    search_fields = ['name', 'sku', 'description']
-    prepopulated_fields = {'slug': ('name',)}
-    readonly_fields = ['sku', 'stock_status', 'created_at', 'updated_at']
-    inlines = [ProductImageInline]
+    
+    search_fields = [
+        'name', 
+        'description', 
+        'sku', 
+        'category'
+    ]
+    
+    readonly_fields = ['slug', 'sku', 'created_at', 'updated_at']
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'slug', 'description', 'short_description')
+            'fields': ('name', 'slug', 'category', 'description', 'short_description')
         }),
         ('Pricing', {
             'fields': ('price', 'compare_price')
         }),
         ('Inventory', {
-            'fields': ('sku', 'stock_quantity', 'low_stock_threshold', 'stock_status')
+            'fields': ('sku', 'stock_quantity', 'low_stock_threshold')
         }),
-        ('Organization', {
-            'fields': ('category', 'is_active', 'is_featured')
+        ('Status', {
+            'fields': ('is_active', 'is_featured')
         }),
         ('SEO', {
             'fields': ('meta_title', 'meta_description'),
@@ -68,24 +70,18 @@ class ProductAdmin(admin.ModelAdmin):
         }),
     )
     
-    def stock_status(self, obj):
-        """Display stock status with color coding"""
-        status = obj.stock_status
-        colors = {
-            'in_stock': 'green',
-            'low_stock': 'orange', 
-            'out_of_stock': 'red'
-        }
-        return format_html(
-            '<span style="color: {};">{}</span>',
-            colors.get(status, 'black'),
-            status.replace('_', ' ').title()
-        )
-    stock_status.short_description = 'Stock Status'
+    inlines = [ProductImageInline]
+    
+    def get_queryset(self, request):
+        """Optimize queryset"""
+        return super().get_queryset(request).prefetch_related('images')
 
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
-    list_display = ['product', 'alt_text', 'is_primary', 'order', 'created_at']
+    """Admin for Product Images"""
+    
+    list_display = ['product', 'is_primary', 'order', 'created_at']
     list_filter = ['is_primary', 'created_at']
     search_fields = ['product__name', 'alt_text']
+    readonly_fields = ['created_at']
