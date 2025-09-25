@@ -1,392 +1,117 @@
-# # apps/products/models.py
-
-# """
-# Product Models
-
-# This module contains all models related to product management.
-# Includes Product, Category, and ProductImage models.
-# """
-
-# import uuid
-# from django.db import models
-# from django.core.validators import MinValueValidator, MaxValueValidator
-# from django.utils.text import slugify
-
-
-# class Category(models.Model):
-#     """
-#     Product Category Model
-#     """
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     name = models.CharField(max_length=100, unique=True)
-#     slug = models.SlugField(max_length=100, unique=True, blank=True)
-#     description = models.TextField(blank=True)
-#     image = models.ImageField(upload_to='categories/', blank=True, null=True)
-#     is_active = models.BooleanField(default=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     class Meta:
-#         verbose_name = 'Category'
-#         verbose_name_plural = 'Categories'
-#         ordering = ['name']
-
-#     def __str__(self):
-#         return self.name
-
-#     def save(self, *args, **kwargs):
-#         if not self.slug:
-#             self.slug = slugify(self.name)
-#         super().save(*args, **kwargs)
-
-
-# class Product(models.Model):
-#     """
-#     Product Model
-#     """
-    
-#     # Stock status choices
-#     IN_STOCK = 'in_stock'
-#     OUT_OF_STOCK = 'out_of_stock'
-#     LOW_STOCK = 'low_stock'
-    
-#     STOCK_STATUS_CHOICES = [
-#         (IN_STOCK, 'In Stock'),
-#         (OUT_OF_STOCK, 'Out of Stock'),
-#         (LOW_STOCK, 'Low Stock'),
-#     ]
-
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     name = models.CharField(max_length=200)
-#     slug = models.SlugField(max_length=200, unique=True, blank=True)
-#     description = models.TextField()
-#     short_description = models.CharField(max_length=300, blank=True)
-    
-#     # Pricing
-#     price = models.DecimalField(
-#         max_digits=10, 
-#         decimal_places=2,
-#         validators=[MinValueValidator(0)]
-#     )
-#     compare_price = models.DecimalField(
-#         max_digits=10, 
-#         decimal_places=2, 
-#         blank=True, 
-#         null=True,
-#         validators=[MinValueValidator(0)],
-#         help_text="Original price for discount comparison"
-#     )
-    
-#     # Inventory
-#     sku = models.CharField(max_length=100, unique=True, blank=True)
-#     stock_quantity = models.IntegerField(
-#         default=0,
-#         validators=[MinValueValidator(0)]
-#     )
-#     low_stock_threshold = models.IntegerField(default=10)
-    
-#     # Organization
-#     category = models.ForeignKey(
-#         Category, 
-#         on_delete=models.SET_NULL, 
-#         null=True, 
-#         related_name='products'
-#     )
-    
-#     # Status
-#     is_active = models.BooleanField(default=True)
-#     is_featured = models.BooleanField(default=False)
-    
-#     # SEO
-#     meta_title = models.CharField(max_length=60, blank=True)
-#     meta_description = models.CharField(max_length=160, blank=True)
-    
-#     # Timestamps
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     class Meta:
-#         verbose_name = 'Product'
-#         verbose_name_plural = 'Products'
-#         ordering = ['-created_at']
-#         indexes = [
-#             models.Index(fields=['name']),
-#             models.Index(fields=['sku']),
-#             models.Index(fields=['category']),
-#             models.Index(fields=['-created_at']),
-#             models.Index(fields=['is_active', 'is_featured']),
-#         ]
-
-#     def __str__(self):
-#         return self.name
-
-#     def save(self, *args, **kwargs):
-#         if not self.slug:
-#             self.slug = slugify(self.name)
-#         if not self.sku:
-#             self.sku = f"PRD-{uuid.uuid4().hex[:8].upper()}"
-#         super().save(*args, **kwargs)
-
-#     @property
-#     def stock_status(self):
-#         """Return stock status based on quantity"""
-#         if self.stock_quantity == 0:
-#             return self.OUT_OF_STOCK
-#         elif self.stock_quantity <= self.low_stock_threshold:
-#             return self.LOW_STOCK
-#         return self.IN_STOCK
-
-#     @property
-#     def discount_percentage(self):
-#         """Calculate discount percentage if compare_price exists"""
-#         if self.compare_price and self.compare_price > self.price:
-#             return round(((self.compare_price - self.price) / self.compare_price) * 100, 2)
-#         return 0
-
-#     @property
-#     def is_on_sale(self):
-#         """Check if product is on sale"""
-#         return self.compare_price and self.compare_price > self.price
-
-
-# class ProductImage(models.Model):
-#     """
-#     Product Image Model for multiple product images
-#     """
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     product = models.ForeignKey(
-#         Product, 
-#         on_delete=models.CASCADE, 
-#         related_name='images'
-#     )
-#     image = models.ImageField(upload_to='products/')
-#     alt_text = models.CharField(max_length=200, blank=True)
-#     is_primary = models.BooleanField(default=False)
-#     order = models.PositiveIntegerField(default=0)
-#     created_at = models.DateTimeField(auto_now_add=True)
-
-#     class Meta:
-#         verbose_name = 'Product Image'
-#         verbose_name_plural = 'Product Images'
-#         ordering = ['order', 'created_at']
-
-#     def __str__(self):
-#         return f"Image for {self.product.name}"
-
-#     def save(self, *args, **kwargs):
-#         # If this is set as primary, unset other primary images for this product
-#         if self.is_primary:
-#             ProductImage.objects.filter(
-#                 product=self.product, 
-#                 is_primary=True
-#             ).exclude(id=self.id).update(is_primary=False)
-#         super().save(*args, **kwargs)
-
-
 
 
 # apps/products/models.py
 
 """
-Product Models - YOUR CURRENT MODELS ARE ALREADY PERFECT! ✅
-
-This module contains all models related to product management.
-Includes Product, Category, and ProductImage models.
+Simple Product Model - Category as text field (no separate table)
 """
 
 import uuid
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.text import slugify
-
-
-class Category(models.Model):
-    """
-    Product Category Model
-    """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(max_length=100, unique=True, blank=True)
-    description = models.TextField(blank=True)
-    image = models.ImageField(upload_to='categories/', blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = 'Category'
-        verbose_name_plural = 'Categories'
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
+from decimal import Decimal
 
 
 class Product(models.Model):
-    """
-    Product Model - EXCELLENT STRUCTURE! ✅
-    """
+    """Product Model - Simplified with category as text field"""
     
-    # Stock status choices
-    IN_STOCK = 'in_stock'
-    OUT_OF_STOCK = 'out_of_stock'
-    LOW_STOCK = 'low_stock'
-    
-    STOCK_STATUS_CHOICES = [
-        (IN_STOCK, 'In Stock'),
-        (OUT_OF_STOCK, 'Out of Stock'),
-        (LOW_STOCK, 'Low Stock'),
-    ]
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200, unique=True, blank=True)
+    name = models.CharField(max_length=200, unique=True)
+    slug = models.SlugField(max_length=220, unique=True, blank=True)
     description = models.TextField()
     short_description = models.CharField(max_length=300, blank=True)
     
-    # Pricing - PERFECT for e-commerce! ✅
-    price = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2,
-        validators=[MinValueValidator(0)]
-    )
-    compare_price = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        blank=True, 
-        null=True,
-        validators=[MinValueValidator(0)],
-        help_text="Original price for discount comparison"
-    )
+    # Category as simple text field - NO foreign key!
+    category = models.CharField(max_length=100, db_index=True)
     
-    # Inventory - EXCELLENT for stock management! ✅
+    # Pricing
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    compare_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Inventory
     sku = models.CharField(max_length=100, unique=True, blank=True)
-    stock_quantity = models.IntegerField(
-        default=0,
-        validators=[MinValueValidator(0)]
-    )
+    stock_quantity = models.IntegerField(default=0)
     low_stock_threshold = models.IntegerField(default=10)
     
-    # Organization
-    category = models.ForeignKey(
-        Category, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        related_name='products'
-    )
-    
-    # Status - PERFECT for soft delete! ✅
+    # Status
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
     
-    # SEO - GREAT for e-commerce! ✅
+    # SEO
     meta_title = models.CharField(max_length=60, blank=True)
     meta_description = models.CharField(max_length=160, blank=True)
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
     class Meta:
-        verbose_name = 'Product'
-        verbose_name_plural = 'Products'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['name']),
-            models.Index(fields=['sku']),
             models.Index(fields=['category']),
+            models.Index(fields=['is_active']),
             models.Index(fields=['-created_at']),
-            models.Index(fields=['is_active', 'is_featured']),
         ]
-
+    
     def __str__(self):
         return self.name
-
+    
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
+        
+        # Auto-generate SKU if not provided
         if not self.sku:
-            self.sku = f"PRD-{uuid.uuid4().hex[:8].upper()}"
+            self.sku = f"PRD-{str(self.id)[:8].upper()}"
+        
         super().save(*args, **kwargs)
-
+    
     @property
     def stock_status(self):
-        """Return stock status based on quantity - BRILLIANT! ✅"""
-        if self.stock_quantity == 0:
-            return self.OUT_OF_STOCK
+        """Get stock status"""
+        if self.stock_quantity <= 0:
+            return 'out_of_stock'
         elif self.stock_quantity <= self.low_stock_threshold:
-            return self.LOW_STOCK
-        return self.IN_STOCK
-
+            return 'low_stock'
+        return 'in_stock'
+    
     @property
     def discount_percentage(self):
-        """Calculate discount percentage if compare_price exists - PERFECT! ✅"""
+        """Calculate discount percentage"""
         if self.compare_price and self.compare_price > self.price:
-            return round(((self.compare_price - self.price) / self.compare_price) * 100, 2)
+            discount = ((self.compare_price - self.price) / self.compare_price) * 100
+            return round(discount, 2)
         return 0
-
+    
     @property
     def is_on_sale(self):
-        """Check if product is on sale - EXCELLENT! ✅"""
-        return self.compare_price and self.compare_price > self.price
+        """Check if product is on sale"""
+        return bool(self.compare_price and self.compare_price > self.price)
 
 
 class ProductImage(models.Model):
-    """
-    Product Image Model for multiple product images - PERFECT! ✅
-    """
+    """Product Image Model"""
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product = models.ForeignKey(
-        Product, 
-        on_delete=models.CASCADE, 
-        related_name='images'
-    )
+    product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='products/')
     alt_text = models.CharField(max_length=200, blank=True)
     is_primary = models.BooleanField(default=False)
-    order = models.PositiveIntegerField(default=0)
+    order = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     class Meta:
-        verbose_name = 'Product Image'
-        verbose_name_plural = 'Product Images'
         ordering = ['order', 'created_at']
-
+    
     def __str__(self):
-        return f"Image for {self.product.name}"
-
+        return f"{self.product.name} - Image {self.order}"
+    
     def save(self, *args, **kwargs):
-        # If this is set as primary, unset other primary images for this product
+        # Ensure only one primary image per product
         if self.is_primary:
             ProductImage.objects.filter(
                 product=self.product, 
                 is_primary=True
             ).exclude(id=self.id).update(is_primary=False)
+        
         super().save(*args, **kwargs)
-
-
-# ========================================================================
-# WHY YOUR MODELS ARE ALREADY PERFECT FOR E-COMMERCE APIs:
-# ========================================================================
-
-"""
-✅ UUID Primary Keys - Perfect for APIs (no sequential ID exposure)
-✅ Slug Fields - SEO-friendly URLs 
-✅ Proper Pricing - Decimal fields with compare_price for sales
-✅ Smart Inventory - Stock tracking with low_stock_threshold
-✅ Soft Delete - is_active field for deactivating products
-✅ SEO Ready - meta_title and meta_description
-✅ Image Support - Multiple images with primary image logic
-✅ Auto-generated SKUs - Unique product identifiers
-✅ Smart Properties - stock_status, discount_percentage, is_on_sale
-✅ Database Optimization - Proper indexes for performance
-✅ Relationships - Clean ForeignKey with related_name
-
-YOUR MODELS REQUIRE NO CHANGES! 🎉
-They're already enterprise-level and perfect for the APIs I created.
-"""
