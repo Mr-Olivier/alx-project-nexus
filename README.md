@@ -8,7 +8,7 @@ Includes **API documentation**, testing guides, and a simple setup process for q
 ## 📦 Features
 
 - 🔑 **Authentication & OTP** (via Mailtrap)
-- 🛍️ **Products & Categories**
+- 🛍️ **Products**
 - 🛒 **Carts & Orders**
 - 💳 **Stripe Payments** (test mode)
 - 📖 **Swagger API Documentation**
