@@ -78,8 +78,8 @@ class UserLoginSerializer(serializers.Serializer):
     
     email = serializers.EmailField()
     password = serializers.CharField(style={'input_type': 'password'})
-    ip_address = serializers.IPAddressField(required=False, write_only=True)
-    user_agent = serializers.CharField(required=False, write_only=True)
+    # ip_address = serializers.IPAddressField(required=False, write_only=True)
+    # user_agent = serializers.CharField(required=False, write_only=True)
     
     def validate_email(self, value):
         """Normalize email to lowercase."""
@@ -124,7 +124,7 @@ class UserLoginSerializer(serializers.Serializer):
 
 class OTPVerificationSerializer(serializers.Serializer):
     """Serializer for OTP verification."""
-    
+    email = serializers.EmailField()
     otp = serializers.CharField(min_length=6, max_length=6)
     otp_type = serializers.ChoiceField(
         choices=OTPVerification.OTP_TYPE_CHOICES,
@@ -172,7 +172,7 @@ class OTPVerificationSerializer(serializers.Serializer):
 
 class ResendOTPSerializer(serializers.Serializer):
     """Serializer for resending OTP."""
-    
+    email = serializers.EmailField()
     otp_type = serializers.ChoiceField(
         choices=OTPVerification.OTP_TYPE_CHOICES,
         default=OTPVerification.EMAIL

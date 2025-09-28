@@ -22,7 +22,7 @@ urlpatterns = [
     path('session-status/<str:session_id>/', CheckSessionStatusView.as_view(), name='session-status'),
     
     # Stripe webhook
-    path('webhook/', StripeWebhookView.as_view(), name='stripe-webhook'),
+    # path('webhook/', StripeWebhookView.as_view(), name='stripe-webhook'),
     
     # Get payment for order
     path('order/<uuid:order_id>/', OrderPaymentDetailView.as_view(), name='order-payment'),
