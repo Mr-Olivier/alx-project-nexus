@@ -58,6 +58,7 @@ Starting the development server
 We’ve included step-by-step guides for testing each feature:
 
 Feature Guide
+
 🔑 Auth & OTP AUTH_TESTING.md
 
 🛍️ Products PRODUCT_TESTING.md
@@ -71,7 +72,7 @@ Feature Guide
 
 After starting the server, explore APIs using Swagger UI:
 
-👉 http://127.0.0.1:8000/api/schema/swagger-ui/
+👉 http://127.0.0.1:8000/api/docs/
 
 🛠️ Tech Stack
 
