@@ -1,44 +1,51 @@
 # 🛒 ALX Project Nexus – E-Commerce API
 
-This is a **Django-based eCommerce backend** with PostgreSQL, REST API, Stripe payments, and Mailtrap OTP support.  
-This project includes **API documentation**, testing guides, and an easy-to-follow setup process.
+A **Django-based eCommerce backend** powered by PostgreSQL, Django REST Framework, Stripe (test mode), and Mailtrap OTP.  
+Includes **API documentation**, testing guides, and a simple setup process for quick onboarding.
 
 ---
 
 ## 📦 Features
 
-- ✅ **Authentication & OTP** (Mailtrap)
-- ✅ **Products & Categories**
-- ✅ **Carts & Orders**
-- ✅ **Stripe Payments (Test Mode)**
-- ✅ **Swagger API Documentation**
+- 🔑 **Authentication & OTP** (via Mailtrap)
+- 🛍️ **Products & Categories**
+- 🛒 **Carts & Orders**
+- 💳 **Stripe Payments** (test mode)
+- 📖 **Swagger API Documentation**
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Quick Start
 
 ### 1️⃣ Clone the Project
 
 ```bash
-git clone <repository-url>
+git clone <your-repo-url>
 cd alx-project-nexus
-2️⃣ Create .env File
-Copy .env.example to .env and fill in your values:
+```
 
-bash
-Copy code
+2️⃣ Configure Environment Variables
+
+Copy the example file and update with your values:
 cp .env.example .env
-Add your database credentials, Mailtrap keys, and Stripe test keys
 
-Use test values if you just want to run it locally
+Fill in:
 
-📖 Setup & Testing Guide
-To set up and run the project, follow the full guide here:
-📄 TEST_TO_RUN.md
+Database credentials
 
-It explains:
+Mailtrap API keys
 
-Creating virtual environment
+Stripe test keys
+
+💡 Use test values if you’re just running locally.
+
+⚙️ Setup & Run
+
+See the full setup guide in TEST_TO_RUN.md
+.
+It covers:
+
+Creating a virtual environment
 
 Installing dependencies
 
@@ -47,57 +54,41 @@ Running migrations
 Starting the development server
 
 🧪 Testing APIs
-We included step-by-step guides for testing APIs.
-Follow them to check each feature:
 
-Feature	Guide
-🔑 Auth & OTP	AUTH_TESTING.md
-🛍️ Products	PRODUCT_TESTING.md
-🛒 Carts	CART_TESTING_GUIDE.md
-📦 Orders	ORDER_TESTING.md
-💳 Payments	PAYMENT_TESTING_GUIDE.md
+We’ve included step-by-step guides for testing each feature:
 
-🗄️ Swagger Documentation
-Once the server is running, visit:
+Feature Guide
+🔑 Auth & OTP AUTH_TESTING.md
 
-Swagger Docs: http://127.0.0.1:8000/api/schema/swagger-ui/
+🛍️ Products PRODUCT_TESTING.md
+
+🛒 Carts CART_TESTING_GUIDE.md
+
+📦 Orders ORDER_TESTING.md
+
+💳 Payments PAYMENT_TESTING_GUIDE.md
+📄 API Documentation
+
+After starting the server, explore APIs using Swagger UI:
+
+👉 http://127.0.0.1:8000/api/schema/swagger-ui/
 
 🛠️ Tech Stack
+
 Backend: Django + Django REST Framework
 
 Database: PostgreSQL
 
-Email: Mailtrap (for OTP)
+Email: Mailtrap (OTP support)
 
 Payments: Stripe (test mode)
 
 Docs: Swagger UI
 
 📌 Notes
-Always activate your virtual environment before running the project
 
-Use .env.example as a reference for required environment variables
+Always activate your virtual environment before running the project.
 
-Use test keys for Stripe and Mailtrap until you go live
+Use .env.example as a reference for required environment variables.
 
-🤝 Contributing
-Pull requests and issues are welcome!
-
-📜 License
-Licensed under MIT – you are free to use, modify, and share.
-
-yaml
-Copy code
-
----
-
-✅ **Why this is good:**
-- Short & clean (doesn’t repeat `TEST_TO_RUN.md`)
-- Clearly points to `.env.example` and tells them to copy it
-- Links to all your test guides so they know where to look
-- Mentions Swagger docs link for easy API exploration
-
----
-
-Would you like me to also write you a **`.env.example` file** with placeholders for PostgreSQL, Mailtrap, and Stripe (so your README reference works out of the box)
-```
+Stick with test keys for Stripe and Mailtrap until production.
